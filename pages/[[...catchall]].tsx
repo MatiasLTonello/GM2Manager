@@ -17,10 +17,14 @@ export default function PlasmicLoaderPage(props: {
 }) {
   const { plasmicData, queryCache } = props;
   const router = useRouter();
+  
+  // Verifica si hay datos de Plasmic para renderizar
   if (!plasmicData || plasmicData.entryCompMetas.length === 0) {
     return <Error statusCode={404} />;
   }
+  
   const pageMeta = plasmicData.entryCompMetas[0];
+  
   return (
     <PlasmicRootProvider
       loader={PLASMIC}
@@ -38,13 +42,17 @@ export default function PlasmicLoaderPage(props: {
 export const getStaticProps: GetStaticProps = async (context) => {
   const { catchall } = context.params ?? {};
   const plasmicPath = typeof catchall === 'string' ? catchall : Array.isArray(catchall) ? `/${catchall.join('/')}` : '/';
+  
   const plasmicData = await PLASMIC.maybeFetchComponentData(plasmicPath);
+  
   if (!plasmicData) {
-    // non-Plasmic catch-all
+    // Página no encontrada en Plasmic
     return { props: {} };
   }
+  
   const pageMeta = plasmicData.entryCompMetas[0];
-  // Cache the necessary data fetched for the page
+  
+  // Cachear los datos necesarios para la página
   const queryCache = await extractPlasmicQueryData(
     <PlasmicRootProvider
       loader={PLASMIC}
@@ -55,7 +63,8 @@ export const getStaticProps: GetStaticProps = async (context) => {
       <PlasmicComponent component={pageMeta.displayName} />
     </PlasmicRootProvider>
   );
-  // Use revalidate if you want incremental static regeneration
+  
+  // Usar revalidate si deseas regeneración estática incremental
   return { props: { plasmicData, queryCache }, revalidate: 60 };
 }
 
